@@ -1,0 +1,58 @@
+version: "2"
+services:
+  guacd:
+    container_name: guacd
+    image: guacamole/guacd
+    restart: always
+
+  frontend:
+    container_name: tomcat
+    build:
+      context: .
+    ports:
+    - 8080:8080
+    environment:
+      HOST: "172.32.4.116"
+      PORT: "5901"
+      USERNAME: ""
+      PASSWORD: "test123"
+      GUACD_HOST: "guacd"
+    restart: always
+
+  sslproxy:
+    container_name: sslproxy
+    image: https
+    ports:
+      - "443:443"
+    environment:
+      HOST: "localhost"
+      UPSTREAM: "authproxy/"
+
+  authproxy:
+    container_name: authproxy
+    image: richardjkendall/oidc-rproxy
+    ports:
+    - 80:80
+    environment:
+      OIDC_PROVIDER_METADATA_URL: "https://keycloak.dev.richardjameskendall.com/auth/realms/desktops/.well-known/openid-configuration"
+      OIDC_PROVIDER_JWKS_URI: "https://keycloak.dev.richardjameskendall.com/auth/realms/desktops/protocol/openid-connect/certs"
+      OIDC_CLIENT_ID: "test"
+      OIDC_CLIENT_SECRET: "9ebb1e94-3969-4ce4-8276-f1e855e3bb65"
+      DOMAIN: "localhost"
+      OIDC_CRYPTO_PASSPRHASE: "HKX43TAWtkbxphWu"
+      UPSTREAM: "frontend:8080/"
+      PORT: "443"
+      SCHEME: "https"
+
+#  authproxy:
+#    container_name: authproxy
+#    image: richardjkendall/basicauth-rproxy
+#    ports:
+#    - 80:80
+#    environment:
+#      UPSTREAM: "frontend:8080/"
+#      REGION: "ap-southeast-2"
+#      TABLE: "basicAuthUsers"
+#      REALM: "test"
+#      CACHE_FOLDER: "/tmp"
+#      CACHE_DURATION: "120"

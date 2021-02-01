@@ -1,0 +1,8 @@
+.DS_Store
+.vagrant
+.vscode
+vnc-proxy/target
+
+.classpath
+.settings
+.project
