@@ -207,6 +207,15 @@ resource "aws_ecs_service" "service" {
                         aws_security_group.allow_egress_to_world.id
                       ], var.security_groups)
   }
+
+  dynamic "capacity_provider_strategy" {
+    for_each = var.use_spot_capacity ? [ "using-spot" ] : []
+
+    content {
+      capacity_provider = "FARGATE_SPOT"
+      weight            = 100
+    }
+  }
 }
 
 resource "aws_lb_listener_rule" "lb_listener_rule" {

@@ -106,3 +106,9 @@ variable "alb_security_group" {
   description = "ID of the security group where the load balancer traffic comes from, optional, only needed when using a load balancer"
   default = ""
 }
+
+variable "use_spot_capacity" {
+  type = bool
+  description = "Should spot capacity be used to create Fargate tasks.  Defaults to 'false'"
+  default = false
+}

@@ -38,6 +38,8 @@ module "oidc" {
   service_name = "${var.cluster_name}-oidc"
   cpu          = 512
   memory       = 1024
+  
+  use_spot_capacity = var.use_spot_capacity
 
   task_name           = "rproxy"
   number_of_instances = var.number_of_oidc_instances
@@ -50,7 +52,7 @@ module "oidc" {
   alb_listener_arn        = var.alb_listener_arn
   service_public_dns_name = var.public_dns_name
   alb_security_group      = var.alb_security_group
-  task_subnets            = var.priv_subnets
+  task_subnets            = var.task_subnets
 
   security_groups = [
     module.allow_p80.group_id
@@ -84,11 +86,11 @@ data "aws_iam_policy_document" "cloudmap_policy" {
     effect = "Allow"
 
     actions = [
-      "servicediscovery:DeregisterInstance",
+      //"servicediscovery:DeregisterInstance",
       "servicediscovery:Get*",
-      "servicediscovery:List*",
-      "servicediscovery:RegisterInstance",
-      "servicediscovery:UpdateInstanceCustomHealthStatus"
+      "servicediscovery:List*"
+      //"servicediscovery:RegisterInstance",
+      //"servicediscovery:UpdateInstanceCustomHealthStatus"
     ]
 
     resources = ["*"]
@@ -109,6 +111,8 @@ module "router" {
   cpu          = 256
   memory       = 512
 
+  use_spot_capacity = var.use_spot_capacity
+
   task_name           = "router"
   number_of_instances = var.number_of_router_instances
 
@@ -117,7 +121,7 @@ module "router" {
   service_registry_id           = var.services_registry_namespace
   service_registry_service_name = "desktops"
 
-  task_subnets = var.priv_subnets
+  task_subnets = var.task_subnets
 
   security_groups = [
     module.allow_p80.group_id,

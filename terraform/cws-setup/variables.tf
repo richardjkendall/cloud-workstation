@@ -20,6 +20,27 @@ variable "namespace_suffix" {
   default = "workstations.local"
 }
 
+variable "pub_subnets" {
+  type = list(string)
+  description = "List of public subnets where ALB should be created."
+}
+
+variable "priv_subnets" {
+  type = list(string)
+  description = "List of private subnets where tasks should be created."
+}
+
+variable "root_domain" {
+  type = string
+  description = "Route53 hosted zone under which the entry for the ALB will be created."
+}
+
+variable "hostname" {
+  type = string
+  description = "Name of the recordset which will be created in Route53 to point to the ALB, defaults to 'desktops'"
+  default = "desktops"
+}
+
 variable "number_of_oidc_instances" {
   type = number
   description = "Number of OIDC (login) instances which should run, defaults to 2."
@@ -36,31 +57,6 @@ variable "use_spot_capacity" {
   type = bool
   description = "Should spot capacity be used to create Fargate tasks.  Defaults to 'false'"
   default = false
-}
-
-variable "services_registry_namespace" {
-  type = string
-  description = "ID of the CloudMap namespace used to register service tasks."
-}
-
-variable "alb_listener_arn" {
-  type = string
-  description = "ARN of ALB listener to attach to, only needed when using an ALB"
-}
-
-variable "public_dns_name" {
-  type = string
-  description = "The public DNS name where the ALB is reachable e.g. 'desktops.root.com'"
-}
-
-variable "alb_security_group" {
-  type = string
-  description = "ID of the security group where the load balancer traffic comes from"
-}
-
-variable "task_subnets" {
-  type = list(string)
-  description = "List of subnets in which to launch tasks"
 }
 
 variable "oidc_metadata_url" {
