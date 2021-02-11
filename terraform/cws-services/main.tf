@@ -49,6 +49,7 @@ module "oidc" {
   service_registry_id           = var.services_registry_namespace
   service_registry_service_name = "oidc"
   
+  attach_to_alb           = true
   alb_listener_arn        = var.alb_listener_arn
   service_public_dns_name = var.public_dns_name
   alb_security_group      = var.alb_security_group
@@ -58,7 +59,7 @@ module "oidc" {
     module.allow_p80.group_id
   ]  
 
-  tasks_def = templatefile("oidc-tasks.json", {
+  tasks_def = templatefile("${path.module}/oidc-tasks.json", {
     region                      = var.aws_region
     cluster                     = var.cluster_name
     service                     = "${var.cluster_name}-oidc"
@@ -73,7 +74,7 @@ module "oidc" {
 }
 
 module "allow_p8080" {
-  source = "../terraform/modules/reflexive-sec-group"
+  source = "../modules/reflexive-sec-group"
 
   aws_region = var.aws_region
   vpc_id     = var.vpc_id
@@ -102,12 +103,12 @@ resource "aws_iam_policy" "cloudmap_policy" {
 }
 
 module "router" {
-  source = "../terraform/modules/ecs-service"
+  source = "../modules/ecs-service"
 
   aws_region   = var.aws_region
   vpc_id       = var.vpc_id
   cluster_name = var.cluster_name
-  service_name = "${var.cluser_name}-router"
+  service_name = "${var.cluster_name}-router"
   cpu          = 256
   memory       = 512
 
@@ -116,6 +117,7 @@ module "router" {
   task_name           = "router"
   number_of_instances = var.number_of_router_instances
 
+  attach_to_alb                 = false
   container_to_expose           = "router"
   container_port_to_expose      = 80
   service_registry_id           = var.services_registry_namespace
@@ -132,10 +134,13 @@ module "router" {
     aws_iam_policy.cloudmap_policy.arn
   ]
 
-  tasks_def = templatefile("router-tasks.json", {
+  tasks_def = templatefile("${path.module}/router-tasks.json", {
     region       = var.aws_region
     cluster      = var.cluster_name
     service      = "${var.cluster_name}-router"
+    notfoundurl  = "https://${var.public_dns_name}/console/desktopnotfound.html"
+    stats_passwd = "blah"
+    prom_passwd  = "blah"
     namespaces   = [
       {
         domainname = "invalid"

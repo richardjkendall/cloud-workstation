@@ -13,7 +13,7 @@ module "infra" {
   root_domain      = var.root_domain
   hostname         = var.hostname
 
-  depends_on = [ module.services ]
+  //depends_on = [ module.services ]
 }
 
 module "services" {

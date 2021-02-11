@@ -10,10 +10,10 @@ output "desktops_namespace_id" {
 
 output "alb_sec_group" {
   description = "ID for the security group which protects the ALB"
-  value = modules.alb.alb_sec_group
+  value = module.alb.alb_sec_group
 }
 
 output "alb_listener_arn" {
   description = "ARN for the ALB listener which is created"
-  value = modules.alb.listener_arn
+  value = module.alb.listener_arn
 }

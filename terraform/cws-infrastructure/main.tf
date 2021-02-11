@@ -9,14 +9,16 @@ module "services_registry" {
   source = "../modules/service-registry"
 
   aws_region = var.aws_region
-  dns_id     = "services.${var.namespace_suffix}"
+  dns_name   = "services.${var.namespace_suffix}"
+  vpc_id     = var.vpc_id
 }
 
 module "desktops_registry" {
   source = "../modules/service-registry"
 
   aws_region = var.aws_region
-  dns_id     = "desktops.${var.namespace_suffix}"
+  dns_name   = "desktops.${var.namespace_suffix}"
+  vpc_id     = var.vpc_id
 }
 
 module "alb" {

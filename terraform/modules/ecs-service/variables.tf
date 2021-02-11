@@ -89,6 +89,12 @@ variable "service_registry_service_name" {
   description = "Name of the service to expose in the service registry.  This will be converted to a SRV compliant value."
 }
 
+variable "attach_to_alb" {
+  type = bool
+  description = "Should we attach this service to an ALB"
+  default = false
+}
+
 variable "alb_listener_arn" {
   type = string
   description = "ARN of listener ARN to attach to, only needed when using an ALB"

@@ -1,6 +1,6 @@
-provider "aws" {
+/*provider "aws" {
   region = var.aws_region
-}
+}*/
 
 data "aws_route53_zone" "root_zone" {
   name         = var.root_domain

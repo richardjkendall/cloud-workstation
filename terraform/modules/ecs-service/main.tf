@@ -1,6 +1,6 @@
-provider "aws" {
+/*provider "aws" {
   region = var.aws_region
-}
+}*/
 
 data "aws_caller_identity" "current" {}
 
@@ -134,19 +134,6 @@ resource "aws_security_group" "allow_egress_to_world" {
   description = "Allow outbound to world"
   vpc_id      = var.vpc_id
 
-  dynamic "ingress" {
-    for_each = var.alb_listener_arn == "" ? [] : [ "blah" ]
-
-    content {
-      from_port = 0
-      to_port   = 0
-      protocol  = "-1"
-      security_groups = [
-        var.alb_security_group
-      ]
-    }
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -158,6 +145,28 @@ resource "aws_security_group" "allow_egress_to_world" {
     Name = "ecs_${var.service_name}_${var.task_name}_to_world"
   }
 }
+
+resource "aws_security_group" "allow_ingress_from_lb" {
+  count = var.attach_to_alb ? 1 : 0
+
+  name_prefix = "ecs-ingress"
+  description = "Allow inbound from lb"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    security_groups = [
+      var.alb_security_group
+    ]
+  }
+
+  tags = {
+    Name = "lb_to_ecs_${var.service_name}_${var.task_name}"
+  }
+}
+
 
 resource "aws_service_discovery_service" "discovery" {
   name = "_${var.service_registry_service_name}._tcp"
@@ -183,7 +192,6 @@ resource "aws_ecs_service" "service" {
   cluster           = data.aws_ecs_cluster.cluster.id
   task_definition   = aws_ecs_task_definition.task.arn
   desired_count     = var.number_of_instances
-  launch_type       = "FARGATE"
 
   service_registries {
     registry_arn    = aws_service_discovery_service.discovery.arn
@@ -192,7 +200,7 @@ resource "aws_ecs_service" "service" {
   }
 
   dynamic "load_balancer" {
-    for_each = var.alb_listener_arn == "" ? [] : [ "blah" ]
+    for_each = var.attach_to_alb ? [ "blah" ] : []
     
     content {
       target_group_arn  = aws_lb_target_group.target_group.0.arn
@@ -203,9 +211,9 @@ resource "aws_ecs_service" "service" {
 
   network_configuration {
     subnets         = var.task_subnets
-    security_groups = concat([
-                        aws_security_group.allow_egress_to_world.id
-                      ], var.security_groups)
+    security_groups = concat([aws_security_group.allow_egress_to_world.id], 
+                              var.security_groups,
+                              var.alb_listener_arn == "" ? [] : [aws_security_group.allow_ingress_from_lb.0.id])
   }
 
   dynamic "capacity_provider_strategy" {
@@ -216,10 +224,19 @@ resource "aws_ecs_service" "service" {
       weight            = 100
     }
   }
+
+  dynamic "capacity_provider_strategy" {
+    for_each = var.use_spot_capacity ? [ ] : [ "not-using-spot"]
+
+    content {
+      capacity_provider = "FARGATE"
+      weight            = 100
+    }
+  }
 }
 
 resource "aws_lb_listener_rule" "lb_listener_rule" {
-  count = var.alb_listener_arn == "" ? 0 : 1
+  count = var.attach_to_alb ? 1 : 0
 
   listener_arn = var.alb_listener_arn
 
@@ -233,10 +250,12 @@ resource "aws_lb_listener_rule" "lb_listener_rule" {
       values = [var.service_public_dns_name]
     }
   }
+
+  depends_on = [ aws_lb_target_group.target_group ]
 }
 
 resource "aws_lb_target_group" "target_group" {
-  count = var.alb_listener_arn == "" ? 0 : 1
+  count = var.attach_to_alb ? 1 : 0
 
   port                  = "80"
   protocol              = "HTTP"

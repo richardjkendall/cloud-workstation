@@ -1,6 +1,6 @@
-provider "aws" {
+/*provider "aws" {
   region = var.aws_region
-}
+}*/
 
 resource "aws_security_group" "sec_group" {
   name_prefix = "reflexive-port-${var.port_num}"

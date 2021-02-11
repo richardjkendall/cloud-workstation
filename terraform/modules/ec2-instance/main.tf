@@ -1,6 +1,6 @@
-provider "aws" {
+/*provider "aws" {
   region = var.aws_region
-}
+}*/
 
 resource "random_string" "random_secret" {
   length = 8
